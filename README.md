@@ -13,6 +13,7 @@ Make sure that the platform reads as Win32, if that is not set up correctly ther
 
 Build and run the source.cpp 
 
-
+PDCurses Source Code:
+https://github.com/wmcbrine/PDCurses/releases/tag/3.9
 
 
