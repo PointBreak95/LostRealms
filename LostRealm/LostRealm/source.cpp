@@ -23,9 +23,9 @@ void drawMainScreen(WINDOW* win, const Map& map, Position player) {
                 continue;
 
             if (mapX == player.x && mapY == player.y) {
-                wattron(win, COLOR_PAIR(5));
-                mvwaddch(win, y + 1, x + 1, '@');
-                wattroff(win, COLOR_PAIR(5));
+                wattron(win, COLOR_PAIR(4));
+                mvwaddch(win, y + 1, x + 1, '0');
+                wattroff(win, COLOR_PAIR(4));
             }
             else if (map.grid[mapY][mapX].explored) {
                 TileType type = map.grid[mapY][mapX].type;
@@ -33,12 +33,12 @@ void drawMainScreen(WINDOW* win, const Map& map, Position player) {
 
                 int color = 1;
                 switch (type) {
-                case TileType::Grass:color = 8; break;
-                case TileType::TallGrass:color = 8; break;
-                case TileType::Water:color = 6; break;
+                case TileType::Grass:color = 7; break;
+                case TileType::TallGrass:color = 7; break;
+                case TileType::Water:color = 5; break;
                 case TileType::Mountain:color = 3; break;
                 case TileType::Trees:color = 1; break;
-                case TileType::Unknown:color = 7; break;
+                case TileType::Unknown:color = 6; break;
                 case TileType::Border:color = 3; break;
                 }
 
@@ -68,20 +68,19 @@ void revealAround(Map& map, Position player, int radius = 5) {
 }
 
 void drawStartScreen() {
-
     clear();
     keypad(stdscr, TRUE);
     mvprintw(SCREEN_HEIGHT / 2 - 1, (SCREEN_WIDTH - 30) / 2, "Welcome to the Lost Realm!");
     mvprintw(SCREEN_HEIGHT / 2, (SCREEN_WIDTH - 42) / 2, "Explore the world, and collect crystals.");
     mvprintw(SCREEN_HEIGHT / 2 + 1, (SCREEN_WIDTH - 53) / 2, "Collect all the crystals to win, be aware of monsters.");
-	mvprintw(SCREEN_HEIGHT / 2 + 2, (SCREEN_WIDTH - 30) / 2, "Press any arrow key to begin...");
+    mvprintw(SCREEN_HEIGHT / 2 + 2, (SCREEN_WIDTH - 30) / 2, "Press any arrow key to begin...");
     refresh();
 
     int ch;
     while (true) {
         ch = getch();
-        // Accept both arrow keys and common fallback codes
-        if (ch == KEY_UP || ch == KEY_DOWN || ch == KEY_LEFT || ch == KEY_RIGHT || ch == 'w' || ch == 'a' || ch == 's' || ch == 'd') {
+        if (ch == KEY_UP || ch == KEY_DOWN || ch == KEY_LEFT || ch == KEY_RIGHT ||
+            ch == 'w' || ch == 'a' || ch == 's' || ch == 'd') {
             break;
         }
     }
@@ -105,78 +104,46 @@ void drawInstructWindow(WINDOW* win, const std::string& message) {
     wrefresh(win);
 }
 
-enum class ActionType { None, Move, Quit, Interact };
-
-struct InputAction {
-    ActionType type;
-    int dx = 0;
-    int dy = 0;
-};
-
-InputAction handleInput() {
-    InputAction action;
-
-    int ch = getch();
-    switch (ch) {
-    case 'q': action.type = ActionType::Quit; break;
-    case 'e': action.type = ActionType::Interact; break;
-    case KEY_UP: case 'w': action = { ActionType::Move, 0, -2 }; break;
-    case KEY_DOWN: case 's': action = { ActionType::Move, 0, 2 }; break;
-    case KEY_LEFT: case 'a': action = { ActionType::Move, -2, 0 }; break;
-    case KEY_RIGHT: case 'd': action = { ActionType::Move, 2, 0 }; break;
-    }
-
-    return action;
-}
-
 int main() {
     initscr();
-
     start_color();
     use_default_colors();
-    init_pair(1, COLOR_YELLOW, -1);     
-    init_pair(2, COLOR_BLUE, -1);      
-    init_pair(3, COLOR_WHITE, -1);     
-    init_pair(4, COLOR_YELLOW, -1);    
-    init_pair(5, COLOR_RED, -1);       
-    init_pair(6, COLOR_CYAN, -1);      
-    init_pair(7, COLOR_MAGENTA, -1);   
-    init_pair(8, COLOR_GREEN, -1);
+
+    init_pair(1, COLOR_YELLOW, -1); // Trees
+    init_pair(2, COLOR_BLUE, -1); // Crystals
+    init_pair(3, COLOR_WHITE, -1); // Mountains & Border
+    init_pair(4, COLOR_RED, -1); // Player
+    init_pair(5, COLOR_CYAN, -1); // Water
+    init_pair(6, COLOR_MAGENTA, -1); // Question Marks
+    init_pair(7, COLOR_GREEN, -1); // Grass & TallGrass
 
     noecho();
     curs_set(0);
     keypad(stdscr, TRUE);
-    nodelay(stdscr, TRUE);
+    nodelay(stdscr, TRUE); 
 
     drawStartScreen();
 
-    int InstructWinWidth = 40;
-    int InstructWinHeight = 3;
-    int InstructWinStartY = 0;
-    int InstructWinStartX = (SCREEN_WIDTH - InstructWinWidth) / 2;
-
-    WINDOW* InstructWin = newwin(3, 40, 0, (SCREEN_WIDTH - InstructWinWidth) / 2);
-
+    // Create windows
+    WINDOW* InstructWin = newwin(3, 40, 0, (SCREEN_WIDTH - 40) / 2);
     WINDOW* mainWin = newwin(SCREEN_HEIGHT, SCREEN_WIDTH, 0, 0);
-
     WINDOW* infoWin = newwin(10, 30, 0, SCREEN_WIDTH + 1);
-
     keypad(mainWin, TRUE);
 
+    // Map + Player
     Map gameMap;
-	gameMap.generateWorld();
+    gameMap.generateWorld();
 
-    Position player; // Randomly place the player on a grass tile
-
+    Position player;
     do {
         player.x = rand() % MAP_WIDTH;
         player.y = rand() % MAP_HEIGHT;
     } while (gameMap.grid[player.y][player.x].type != TileType::Grass);
 
-	revealAround(gameMap, player); // Reveal the area around the player
+    revealAround(gameMap, player);
 
-	// Place some unknown tiles in unexplored area
-    for (int i = 0; i < 10; ++i) {
+    // Place some unknowns
+    for (int i = 0; i < 15; ++i) {
         int x, y;
         do {
             x = rand() % MAP_WIDTH;
@@ -185,36 +152,34 @@ int main() {
         gameMap.grid[y][x].type = TileType::Unknown;
     }
 
+    // Main game loop using chrono
     while (true) {
-        InputAction action = handleInput();
+        int dx = 0, dy = 0;
 
-        switch (action.type) {
-        case ActionType::Move: {
-            int newX = player.x + action.dx;
-            int newY = player.y + action.dy;
-            if (newX >= 0 && newX < MAP_WIDTH) player.x = newX;
-            if (newY >= 0 && newY < MAP_HEIGHT) player.y = newY;
-            break;
-        }
-        case ActionType::Interact:
-            // Placeholder: Add item/monster interaction here
-            drawInstructWindow(InstructWin, "There's nothing to interact with.");
-            break;
+        auto start = chrono::steady_clock::now();
+        auto end = start + chrono::milliseconds(50);
 
-        case ActionType::Quit:
-            endwin();
-            return 0;
+        while (chrono::steady_clock::now() < end) {
+            int ch = getch();
+            switch (ch) {
+            case 'q': endwin(); return 0;
+            case 'e': drawInstructWindow(InstructWin, "There's nothing to interact with."); break;
+            case KEY_UP: case 'w': dy -= 2; break;
+            case KEY_DOWN: case 's': dy += 2; break;
+            case KEY_LEFT: case 'a': dx -= 2; break;
+            case KEY_RIGHT: case 'd': dx += 2; break;
+            }
+            this_thread::sleep_for(chrono::milliseconds(10));
+        }   
 
-        default:
-            break;
-        }
+        int newX = player.x + dx;
+        int newY = player.y + dy;
+        if (newX >= 0 && newX < MAP_WIDTH)  player.x = newX;
+        if (newY >= 0 && newY < MAP_HEIGHT) player.y = newY;
 
         revealAround(gameMap, player);
         drawMainScreen(mainWin, gameMap, player);
         drawInfoWindow(infoWin, player);
         drawInstructWindow(InstructWin, "Use arrow keys to explore.");
-
-        this_thread::sleep_for(chrono::milliseconds(50));
     }
-
 }
