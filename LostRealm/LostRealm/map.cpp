@@ -120,6 +120,7 @@ char Map::getTileChar(TileType t) const {
     case TileType::TallGrass: return ',';
     case TileType::Trees: return '!';
     case TileType::Border: return 'o';
+    case TileType::Unknown: return '?';
     default: return ' ';
     }
 }
