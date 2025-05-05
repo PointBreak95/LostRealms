@@ -105,8 +105,6 @@ void Map::generateWorld() {
    
 }
 
-
-
 void Map::reveal(Position pos) {
     if (pos.x >= 0 && pos.x < MAP_WIDTH && pos.y >= 0 && pos.y < MAP_HEIGHT)
         grid[pos.y][pos.x].explored = true;
