@@ -19,8 +19,7 @@ void drawMainScreen(WINDOW* win, const Map& map, Position player) {
             int mapX = player.x - SCREEN_WIDTH / 2 + x + 1;
             int mapY = player.y - SCREEN_HEIGHT / 2 + y + 1;
 
-            if (mapX < 0 || mapX >= MAP_WIDTH || mapY < 0 || mapY >= MAP_HEIGHT)
-                continue;
+            if (mapX < 0 || mapX >= MAP_WIDTH || mapY < 0 || mapY >= MAP_HEIGHT) continue;
 
             if (mapX == player.x && mapY == player.y) {
                 wattron(win, COLOR_PAIR(4));
@@ -130,7 +129,7 @@ int main() {
     WINDOW* infoWin = newwin(10, 30, 0, SCREEN_WIDTH + 1);
     keypad(mainWin, TRUE);
 
-    // Map + Player
+    // Map Generation
     Map gameMap;
     gameMap.generateWorld();
 
@@ -151,8 +150,10 @@ int main() {
         } while (gameMap.grid[y][x].type != TileType::Grass || gameMap.grid[y][x].explored);
         gameMap.grid[y][x].type = TileType::Unknown;
     }
+    // Place some crystals, monsters, and consumables
 
-    // Main game loop using chrono
+
+    // Main game loop
     while (true) {
         int dx = 0, dy = 0;
 
@@ -163,7 +164,27 @@ int main() {
             int ch = getch();
             switch (ch) {
             case 'q': endwin(); return 0;
-            case 'e': drawInstructWindow(InstructWin, "There's nothing to interact with."); break;
+            case 'e': {
+                bool found = false;
+                for (int dy = -1; dy <= 1 && !found; ++dy) {
+                    for (int dx = -1; dx <= 1 && !found; ++dx) {
+                        int tx = player.x + dx;
+                        int ty = player.y + dy;
+                        if (tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT) {
+                            TileType type = gameMap.grid[ty][tx].type;
+                            if (type == TileType::Unknown) {
+                                gameMap.grid[ty][tx].type = TileType::Grass; 
+                                drawInstructWindow(InstructWin, "You discovered something!");
+                                found = true;
+                            }
+                        }
+                    }
+                }
+                if (!found) {
+                    drawInstructWindow(InstructWin, "There's nothing nearby to interact with.");
+                }
+                break;
+            }
             case KEY_UP: case 'w': dy -= 2; break;
             case KEY_DOWN: case 's': dy += 2; break;
             case KEY_LEFT: case 'a': dx -= 2; break;
@@ -180,6 +201,19 @@ int main() {
         revealAround(gameMap, player);
         drawMainScreen(mainWin, gameMap, player);
         drawInfoWindow(infoWin, player);
-        drawInstructWindow(InstructWin, "Use arrow keys to explore.");
+        
+        string tileMessage;
+        switch (gameMap.grid[player.y][player.x].type) {
+            case TileType::Grass:tileMessage = "You're on Grass."; break;
+            case TileType::TallGrass:tileMessage = "You're in Tall Grass."; break;
+            case TileType::Water:tileMessage = "You're in a River."; break;
+            case TileType::Mountain:tileMessage = "You're in the Mountains."; break;
+            case TileType::Trees:tileMessage = "You're in a Forest."; break;
+            case TileType::Unknown:tileMessage = "There's something mysterious here."; break;
+            case TileType::Border:tileMessage = "You've reached the world border."; break;
+            default:tileMessage = "You're somewhere undefined."; break;
+        }
+        drawInstructWindow(InstructWin, tileMessage);
+
     }
 }
