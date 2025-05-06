@@ -1,4 +1,5 @@
 To run the game download both folders.
+Extract the contents of the zip file into a separate folder.
 Ensure they are stored in the same directory.
 
 Before running the code follow these instructions:
