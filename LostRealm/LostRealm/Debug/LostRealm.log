@@ -1,0 +1,4 @@
+﻿  source.cpp
+C:\Users\kkame\Music\C++ Code\LostRealm\LostRealm\source.cpp(147,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\kkame\Music\C++ Code\LostRealm\LostRealm\source.cpp(221,27): warning C4018: '<': signed/unsigned mismatch
+  LostRealm.vcxproj -> C:\Users\kkame\Music\C++ Code\LostRealm\Debug\LostRealm.exe
