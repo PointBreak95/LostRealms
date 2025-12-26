@@ -16,6 +16,6 @@ This is because PDCurses is based around Win32 so trying to run the code as x64 
 Build and run the source.cpp 
 
 PDCurses Source Code:
-https://github.com/wmcbrine/PDCurses/releases/tag/3.9
+https://github.com/wmcbrine/PDCurses
 
 
